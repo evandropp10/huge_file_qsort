@@ -12,235 +12,73 @@ import (
 
 func main() {
 
-	var para bool
+	var stop bool
 
-	arquivo, err := os.Open("huge.log")
+	// Abre o arquivo
+	file, err := os.Open("huge.log")
 
 	if err != nil {
 		log.Fatalf("ERRO: %v", err)
 	}
 
-	defer arquivo.Close()
+	defer file.Close()
 
-	r := bufio.NewReader(arquivo)
+	r := bufio.NewReader(file)
 
+	// leitura linha a linha e coloca na lista newlist
 	line, prefix, erro := r.ReadLine()
 	if erro != nil {
 	}
 	log.Println(prefix)
 
-	var listanova []string
+	var newlist []string
 
-	for para == false {
+	for stop == false {
 
-		listanova = append(listanova, string(line))
+		newlist = append(newlist, string(line))
 
 		line, prefix, erro = r.ReadLine()
 
 		if erro != nil {
-			para = true
+			stop = true
 		}
 
 	}
 
+	// logs e chama função qsort
 	log.Println("antes qsort")
-	listanova = qsort(listanova)
+	newlist = qsort(newlist)
 	log.Println("depois qsort")
-	log.Println(len(listanova))
+	log.Println(len(newlist))
 
-	errArq := escreverTexto(listanova, "huge_orded.log")
-	if errArq != nil {
-		log.Fatalf("Erro:", errArq)
+	// escreve o arquivo ordenado
+	errFile := writeFile(newlist, "huge_orded.log")
+	if errFile != nil {
+		log.Fatalf("Erro:", errFile)
 	} else {
+		// aplica o md5sum
 		setmd5()
 	}
 }
 
-func mainzz() {
-
-	var para bool
-
-	arquivo, err := os.Open("huge.log")
-
-	if err != nil {
-		log.Fatalf("ERRO: %v", err)
-	}
-
-	defer arquivo.Close()
-
-	r := bufio.NewReader(arquivo)
-
-	line, prefix, erro := r.ReadLine()
-	if erro != nil {
-	}
-	log.Println(prefix)
-
-	var listanova []string
-
-	for para == false {
-
-		listanova = sortByLine(listanova, string(line))
-		log.Println(len(listanova))
-
-		line, prefix, erro = r.ReadLine()
-
-		if erro != nil {
-			para = true
-		}
-
-	}
-
-	errArq := escreverTexto(listanova, "huge_orded.log")
-	if errArq != nil {
-		log.Fatalf("Erro:", errArq)
-	} else {
-		setmd5()
-	}
-
-	/**TESTE
-
-	// testando
-	var listateste []string
-
-	listateste = append(listateste, "ab")
-	listateste = append(listateste, "zx")
-	listateste = append(listateste, "rt")
-	listateste = append(listateste, "iu")
-	listateste = append(listateste, "aa")
-	listateste = append(listateste, "ll")
-	listateste = append(listateste, "6y")
-	listateste = append(listateste, "u8")
-	listateste = append(listateste, "0p")
-	listateste = append(listateste, "uu")
-	listateste = append(listateste, "00")
-	listateste = append(listateste, "fg")
-	listateste = append(listateste, "ra")
-	listateste = append(listateste, "zz")
-	listateste = append(listateste, "cp")
-	listateste = append(listateste, "ep")
-	listateste = append(listateste, "fc")
-	listateste = append(listateste, "bp")
-
-	var listanova []string
-
-	for index := 0; index < len(listateste); index++ {
-		listanova = sortByLine(listanova, listateste[index])
-		log.Println(listanova, len(listanova))
-	}
-
-	errArq := escreverTexto(listanova, "huge_orded.log")
-	if errArq != nil {
-		log.Fatalf("Erro:", errArq)
-	} else {
-		setmd5()
-	}
-	 FIM TESTE **/
-
-}
-
-func sortByLine(lista []string, linha string) []string {
-
-	if len(lista) == 0 {
-		lista = append(lista, linha)
-		return lista
-	}
-
-	if len(lista) == 1 {
-		if lista[0] > linha {
-			lista = append(lista, lista[0])
-			lista[0] = linha
-		} else {
-			lista = append(lista, linha)
-		}
-		return lista
-	}
-
-	var linhaAux string
-	var subs bool
-	var pos int
-	var posAux int
-	var encontrou bool
-	var maior bool
-	var menor bool
-
-	pos = len(lista) / 2
-
-	for encontrou == false {
-		//log.Println(pos, menor, maior)
-		if lista[pos] > linha {
-			maior = true
-			if menor == false {
-				posAux = pos
-				pos = pos / 2
-			} else {
-				encontrou = true
-			}
-		}
-
-		if lista[pos] < linha {
-			menor = true
-			if maior == false {
-				posAux = pos
-				pos = pos + (len(lista) / 4)
-				if pos > len(lista)-1 {
-					pos = len(lista) - 1
-					encontrou = true
-				}
-				if pos == 1 {
-					pos = 0
-				}
-			} else {
-				encontrou = true
-			}
-		}
-		if pos == 0 {
-			encontrou = true
-		}
-
-	}
-
-	if posAux < pos {
-		pos = posAux
-	}
-
-	for index := pos; index < len(lista); index++ {
-		if subs == false {
-			if linha < lista[index] {
-				linhaAux = lista[index]
-				lista[index] = linha
-				linha = linhaAux
-				subs = true
-			}
-		} else {
-			linhaAux = lista[index]
-			lista[index] = linha
-			linha = linhaAux
-		}
-	}
-
-	lista = append(lista, linha)
-
-	return lista
-}
-
-func escreverTexto(linhas []string, caminhoDoArquivo string) error {
+func writeFile(lines []string, fileName string) error {
 	// Cria o arquivo de texto
-	arquivo, err := os.Create(caminhoDoArquivo)
+	file, err := os.Create(fileName)
 	// Caso tenha encontrado algum erro retornar ele
 	if err != nil {
 		return err
 	}
 	// Garante que o arquivo sera fechado apos o uso
-	defer arquivo.Close()
+	defer file.Close()
 
 	// Cria um escritor responsavel por escrever cada linha do slice no arquivo de texto
-	escritor := bufio.NewWriter(arquivo)
-	for _, linha := range linhas {
-		fmt.Fprintln(escritor, linha)
+	writer := bufio.NewWriter(file)
+	for _, line := range lines {
+		fmt.Fprintln(writer, line)
 	}
 
 	// Caso a funcao flush retorne um erro ele sera retornado aqui tambem
-	return escritor.Flush()
+	return writer.Flush()
 }
 
 func setmd5() {
@@ -265,13 +103,13 @@ func qsort(a []string) []string {
 
 	left, right := 0, len(a)-1
 
-	// Pick a pivot
+	// Escolhe um pivo
 	pivotIndex := rand.Int() % len(a)
 
-	// Move the pivot to the right
+	// Move o pivo para a direita
 	a[pivotIndex], a[right] = a[right], a[pivotIndex]
 
-	// Pile elements smaller than the pivot on the left
+	// Coloca a pilha de ementos menor a esquerda do pivo
 	for i := range a {
 		if a[i] < a[right] {
 			a[i], a[left] = a[left], a[i]
@@ -279,10 +117,10 @@ func qsort(a []string) []string {
 		}
 	}
 
-	// Place the pivot after the last smaller element
+	// Coloca o pivo apos o ultimo elemento menor
 	a[left], a[right] = a[right], a[left]
 
-	// Go down the rabbit hole
+	// Vai fundo!!
 	qsort(a[:left])
 	qsort(a[left+1:])
 
